@@ -14,7 +14,7 @@ export const onGetProducts = (payload) => async(dispatch) => {
 
     try {
 
-        const response = await GetData('/');
+        const response = await GetData('/products');
 
         dispatch(landingProducts(response.data));
 
@@ -30,7 +30,7 @@ export const onGetProducts = (payload) => async(dispatch) => {
 
     try {
 
-        const response = await GetData('/'+id);
+        const response = await GetData('/products/'+id);
 
         dispatch(productDetails(response.data));
 

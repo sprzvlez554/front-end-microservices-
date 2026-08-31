@@ -63,13 +63,14 @@ const Profile = () => {
   const [postalCode, setPostalCode] = useState("");
   const [country, setCountry] = useState("");
 
-  const { token } = user;
+  const { token, _id, id } = user;
+  const customerId = _id || id;
 
   useEffect(() => {
-    if (token) {
-      dispatch(onViewProfile());
+    if (customerId) {
+      dispatch(onViewProfile(customerId));
     }
-  }, [token]);
+  }, [customerId, dispatch]);
 
   const onAdd = ({ _id, qty }) => {
     dispatch(onAddToCart({ _id, qty }));
@@ -83,12 +84,13 @@ const Profile = () => {
     dispatch(onRemoveFromWishlist(_id));
   };
 
-  const onTapPlaceOrder = () => {
-    dispatch(onPlaceOrder({ txnId: "72365ffdds" }));
-  };
-
+  
   const addNewAddress = () => {
     dispatch(onCreateAddress({ street, postalCode, city, country }));
+  };
+  
+  const onTapPlaceOrder = () => {
+  dispatch(onPlaceOrder());
   };
 
   const emptyState = (message) => (
@@ -111,8 +113,13 @@ const Profile = () => {
   const initial = (displayName || profile?.email || "?").charAt(0).toUpperCase();
 
   const totalAmount = Array.isArray(cart)
-    ? cart.reduce((sum, { unit, product }) => sum + unit * product.price, 0)
-    : 0;
+  ? cart.reduce((sum, item) => {
+      const unit = Number(item?.unit ?? item?.quantity ?? 0);
+      const price = Number(item?.product?.price ?? item?.price ?? 0);
+
+      return sum + unit * price;
+    }, 0)
+  : 0;
 
   return (
     <div className="min-h-screen bg-[#F5F5F3] px-5 sm:px-8 lg:px-10 py-8">

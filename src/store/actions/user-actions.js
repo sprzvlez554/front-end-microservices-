@@ -10,7 +10,8 @@ import {
   userProfile,
 } from "../user-slice";
 
-// Mensajes de error para mostrar en español
+// ==================== MENSAJES DE ERROR ====================
+
 const API_ERROR_MESSAGES = {
   "Invalid credentials": "Correo o contraseña incorrectos.",
   "Email already registered": "Ese correo ya tiene una cuenta registrada.",
@@ -36,8 +37,9 @@ const describeAuthError = (err) => {
 
 // ==================== ERROR ====================
 
-export const onClearAuthError = () => (dispatch) =>
+export const onClearAuthError = () => (dispatch) => {
   dispatch(authErrorCleared());
+};
 
 // ==================== TOKEN ====================
 
@@ -64,9 +66,15 @@ export const onSignup =
         phone,
       });
 
-      const { token } = response.data;
+      const { token, customer } = response.data;
 
+      // Guardar token
       await SetAuthToken(token);
+
+      // Guardar ID del cliente
+      if (customer?._id) {
+        localStorage.setItem("customerId", customer._id);
+      }
 
       return dispatch(userSignup(response.data));
     } catch (err) {
@@ -87,9 +95,15 @@ export const onLogin =
         password,
       });
 
-      const { token } = response.data;
+      const { token, customer } = response.data;
 
+      // Guardar token
       await SetAuthToken(token);
+
+      // Guardar ID del cliente
+      if (customer?._id) {
+        localStorage.setItem("customerId", customer._id);
+      }
 
       return dispatch(userLogin(response.data));
     } catch (err) {
@@ -102,17 +116,39 @@ export const onLogin =
 export const onLogout = () => async (dispatch) => {
   await SetAuthToken(null);
 
+  // Eliminar ID del cliente
+  localStorage.removeItem("customerId");
+
   return dispatch(userLogout());
 };
 
 // ==================== PROFILE ====================
 
-export const onViewProfile = (id) => async (dispatch) => {
+export const onViewProfile = () => async (dispatch, getState) => {
   try {
+    const state = getState();
+
+    const user = state.userReducer?.user || {};
+
+    const id =
+      user._id ||
+      user.id ||
+      user.customer?._id ||
+      user.customer?.id ||
+      localStorage.getItem("customerId");
+
+    if (!id) {
+      console.log("No se encontró el ID del cliente.");
+      return;
+    }
+
     const response = await GetData(`/customers/profile/${id}`);
 
     return dispatch(userProfile(response.data));
   } catch (err) {
-    console.log(err);
+    console.log(
+      "Error obteniendo perfil:",
+      err.response?.data || err.message
+    );
   }
 };

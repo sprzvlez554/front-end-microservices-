@@ -81,21 +81,11 @@ const userSlice = createSlice({
     userProfile(state, action) {
       state.profile = action.payload;
 
-      state.wishlist = Array.isArray(action.payload.wishlist)
-        ? action.payload.wishlist
-        : [];
-
-      state.cart = Array.isArray(action.payload.cart)
-        ? action.payload.cart
-        : [];
-
-      state.address = Array.isArray(action.payload.address)
-        ? action.payload.address
-        : [];
-
+      // Carrito y wishlist son locales; no se sobrescriben con el perfil.
+      // Solo se actualizan los pedidos que vienen del backend cuando existen.
       state.orders = Array.isArray(action.payload.orders)
         ? action.payload.orders
-        : [];
+        : state.orders;
     },
 
     // ==================== ADDRESS ====================

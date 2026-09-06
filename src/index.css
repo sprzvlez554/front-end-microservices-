@@ -1,15 +1,32 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&family=Inter:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Inter:wght@400;500;600&display=swap');
 @import "tailwindcss";
+
+@theme {
+  --color-ink: #0a0a0a;
+  --color-cream: #f4f4f2;
+  --color-paper: #ecece9;
+  --color-accent: #ffb400;
+  --color-accent-soft: #fff2d1;
+  --font-display: "DM Sans", sans-serif;
+  --font-body: "Inter", sans-serif;
+}
 
 body {
   margin: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: var(--color-cream);
+  font-family: var(--font-body);
 }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+::selection {
+  background-color: var(--color-accent);
+  color: var(--color-ink);
 }
 
 @keyframes fadeUp {
@@ -35,6 +52,27 @@ code {
 @keyframes wordReveal {
   from { opacity: 0; transform: translateY(100%); filter: blur(4px); }
   to { opacity: 1; transform: translateY(0); filter: blur(0px); }
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@keyframes floatY {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.marquee-track {
+  animation: marquee 26s linear infinite;
+}
+
+.animate-float {
+  animation: floatY 5s ease-in-out infinite;
+}
+.animate-float-delay {
+  animation: floatY 5s ease-in-out 2.5s infinite;
 }
 
 .animate-fade-up {

@@ -144,7 +144,24 @@ export const onViewProfile = () => async (dispatch, getState) => {
 
     const response = await GetData(`/customers/profile/${id}`);
 
-    return dispatch(userProfile(response.data));
+    const profileData = response.data || {};
+
+    let orders = [];
+
+    try {
+      const ordersResponse = await GetData(`/shopping/customer/${id}`);
+
+      if (Array.isArray(ordersResponse.data?.shoppings)) {
+        orders = ordersResponse.data.shoppings;
+      }
+    } catch (ordersErr) {
+      console.log(
+        "Error obteniendo pedidos:",
+        ordersErr.response?.data || ordersErr.message
+      );
+    }
+
+    return dispatch(userProfile({ ...profileData, orders }));
   } catch (err) {
     console.log(
       "Error obteniendo perfil:",

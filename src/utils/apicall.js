@@ -25,45 +25,26 @@ export const registerUnauthorizedHandler = (onUnauthorized) => {
   );
 };
 
-export const GetData = async(endPoint,options) => {
-  try {
-    setHeader();
-    const response = await api.get(endPoint);
-    return response
-  } catch (err) {
-      throw err;
-  }
-    
+export const GetData = async(endPoint) => {
+  setHeader();
+  const response = await api.get(endPoint);
+  return response;
 }
 
-export const PostData = async(endPoint,options) => {
-  try {
-    setHeader();
-    const response = await api.post(endPoint, options);
-    return response
-  } catch (err) {
-      throw err;
-  }  
+export const PostData = async(endPoint, options) => {
+  setHeader();
+  const response = await api.post(endPoint, options);
+  return response;
 }
 
-export const PutData = async(endPoint,options) => {
-
-  try {
-    setHeader();
-    const response = await api.put(endPoint, options);
-    return response
-  } catch (err) {
-      throw err;
-  }  
+export const PutData = async(endPoint, options) => {
+  setHeader();
+  const response = await api.put(endPoint, options);
+  return response;
 }
 
 export const DeleteData = async(endPoint) => {
-
-  try {
-    setHeader();
-    const response = await api.delete(endPoint);
-    return response
-  } catch (err) {
-      throw err;
-  }  
+  setHeader();
+  const response = await api.delete(endPoint);
+  return response;
 }

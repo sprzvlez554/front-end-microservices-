@@ -1,4 +1,4 @@
-import { GetData, PostData, PutData, DeleteData } from "../../utils";
+import { GetData, PostData, PutData } from "../../utils";
 
 import {
   landingProducts,
@@ -10,9 +10,19 @@ import {
   removeFromWishlist,
   addToCart,
   removeFromCart,
-  addNewAddress,
   placeOrder,
 } from "../user-slice";
+
+import { onViewProfile } from "./user-actions";
+
+// ==================== HELPERS ====================
+
+const localCustomerId = (user) =>
+  user.customer?._id ||
+  user.customer?.id ||
+  user._id ||
+  user.id ||
+  localStorage.getItem("customerId");
 
 // ==================== PRODUCTS ====================
 
@@ -70,11 +80,18 @@ export const onRemoveFromWishlist = (id) => async (dispatch) => {
 
 export const onAddToCart =
   ({ _id, qty = 1, ...product }) =>
-  async (dispatch) => {
+  async (dispatch, getState) => {
+    const userState = getState().userReducer || {};
+
+    const existing = (userState.cart || []).find(
+      (item) => item?.product?._id === _id
+    );
+
     dispatch(
       addToCart({
         product: {
           _id,
+          ...(existing?.product || {}),
           ...product,
         },
         unit: qty,
@@ -89,21 +106,67 @@ export const onRemoveFromCart =
   };
 
 // ==================== ADDRESS ====================
-// Se maneja localmente porque el backend actual
-// no tiene /customer/address.
+// El backend guarda una sola dirección como texto en Customer.address.
 
 export const onCreateAddress =
   ({ street, postalCode, city, country }) =>
-  async (dispatch) => {
-    const address = {
-      street,
-      postalCode,
-      city,
-      country,
-    };
+  async (dispatch, getState) => {
+    const state = getState();
 
-    dispatch(addNewAddress(address));
+    const userState = state.userReducer || {};
+    const user = userState.user || {};
+
+    const customerId = localCustomerId(user);
+
+    const addressText = [street, postalCode, city, country]
+      .map((part) => (part || "").trim())
+      .filter(Boolean)
+      .join(", ");
+
+    if (!customerId) {
+      console.log("No existe customerId para guardar la dirección.");
+      return;
+    }
+
+    if (!addressText) {
+      console.log("Dirección vacía.");
+      return;
+    }
+
+    try {
+      await PutData(`/customers/${customerId}`, { address: addressText });
+      dispatch(onViewProfile());
+    } catch (err) {
+      console.log(
+        "Error guardando la dirección:",
+        err.response?.data || err.message
+      );
+    }
   };
+
+export const onRemoveAddress = () => async (dispatch, getState) => {
+  const state = getState();
+
+  const userState = state.userReducer || {};
+  const user = userState.user || {};
+
+  const customerId = localCustomerId(user);
+
+  if (!customerId) {
+    console.log("No existe customerId para eliminar la dirección.");
+    return;
+  }
+
+  try {
+    await PutData(`/customers/${customerId}`, { address: "" });
+    dispatch(onViewProfile());
+  } catch (err) {
+    console.log(
+      "Error eliminando la dirección:",
+      err.response?.data || err.message
+    );
+  }
+};
 
 // ==================== ORDER ====================
 // Backend:
@@ -118,12 +181,7 @@ export const onPlaceOrder = () => async (dispatch, getState) => {
     const cart = userState.cart || [];
 
     // Intentamos encontrar el ID del cliente
-    const customerId =
-      user.customer?._id ||
-      user.customer?.id ||
-      user._id ||
-      user.id ||
-      localStorage.getItem("customerId");
+    const customerId = localCustomerId(user);
 
     if (!customerId) {
       console.log("No existe customerId.");
@@ -163,11 +221,29 @@ export const onPlaceOrder = () => async (dispatch, getState) => {
 
     console.log("Compra creada:", response.data);
 
-    dispatch(placeOrder(response.data));
+    const orderWithDetails = {
+      ...response.data,
+      products: (response.data?.products || []).map((p) => {
+        const cartItem = (cart || []).find(
+          (item) => item?.product?._id === p.productId
+        );
+        return {
+          ...p,
+          name: cartItem?.product?.name,
+          banner: cartItem?.product?.banner,
+        };
+      }),
+    };
+
+    dispatch(placeOrder(orderWithDetails));
+
+    return orderWithDetails;
   } catch (err) {
     console.log(
       "Error creando la compra:",
       err.response?.data || err.message
     );
+
+    return null;
   }
 };
